@@ -11,9 +11,15 @@
 }
 
 .window-item {
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
-  padding: 5px;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #ccc;
+}
+
+.window-item.selected { /* {{ edit: Style for selected window-item }} */
+  background-color: #e0f7fa;
 }
 
 .window-label {
@@ -39,5 +45,39 @@
 
 .tab-title {
   flex-grow: 1;
+}
+
+.active-tab {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.tab-dropdown { /* {{ edit: Make dropdown scrollable when overflow }} */
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  list-style: none;
+  padding: 5px;
+  margin-top: 5px;
+  z-index: 1000; /* {{ edit: Ensure dropdown appears above other elements }} */
+}
+
+.tab-dropdown .tab-item {
+  padding: 5px 10px;
+}
+
+/* Adjust the merge button for better usability */
+.merge-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.merge-button:disabled { /* {{ edit: Style disabled merge button }} */
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 

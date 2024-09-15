@@ -1,5 +1,5 @@
 // App.jsx
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import WindowItem from './WindowItem';
 import {
   getAllWindows,
@@ -36,22 +36,22 @@ function App() {
 
   // Merge the selected windows
   const mergeWindows = async () => {
-    if (selectedWindowIds.length !== 2) {
-      alert('Please select exactly two windows to merge.');
+    if (selectedWindowIds.length < 2) { // {{ edit: Allow merging two or more windows }}
+      alert('Please select two or more windows to merge.');
       return;
     }
 
-    const [windowId1, windowId2] = selectedWindowIds.map(Number);
+    const [targetWindowId, ...otherWindowIds] = selectedWindowIds.map(Number);
 
-    // Get all tabs from the second window
-    const tabs = await queryTabs({ windowId: windowId2 });
-    const tabIds = tabs.map((tab) => tab.id);
+    // Get all tabs from the other windows
+    const allOtherTabs = await Promise.all(otherWindowIds.map(id => queryTabs({ windowId: id })));
+    const tabIdsToMove = allOtherTabs.flat().map(tab => tab.id);
 
-    // Move tabs to the first window
-    await moveTabs(tabIds, { windowId: windowId1, index: -1 });
+    // Move tabs to the target window
+    await moveTabs(tabIdsToMove, { windowId: targetWindowId, index: -1 });
 
-    // Close the second window
-    await removeWindow(windowId2);
+    // Close the other windows
+    await Promise.all(otherWindowIds.map(id => removeWindow(id)));
 
     // Refresh the window list
     await fetchWindows();
@@ -69,7 +69,11 @@ function App() {
           onSelect={handleWindowSelect}
         />
       ))}
-      <button onClick={mergeWindows} className="merge-button">
+      <button
+        onClick={mergeWindows}
+        className="merge-button"
+        disabled={selectedWindowIds.length < 2} // {{ edit: Disable button if fewer than two windows are selected }}
+      >
         Merge Selected Windows
       </button>
     </div>
