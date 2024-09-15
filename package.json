@@ -1,5 +1,5 @@
 {
-  "name": "chrome-tab-manager",
+  "name": "tab-control",
   "private": true,
   "version": "0.0.0",
   "type": "module",

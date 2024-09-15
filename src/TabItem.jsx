@@ -1,5 +1,6 @@
+import PropTypes from 'prop-types';
+
 // TabItem.jsx
-import React from 'react';
 
 function TabItem({ tab }) {
   return (
@@ -18,5 +19,11 @@ function TabItem({ tab }) {
   );
 }
 
-export default TabItem;
+TabItem.propTypes = {
+  tab: PropTypes.shape({
+    favIconUrl: PropTypes.string,
+    title: PropTypes.string.isRequired,
+  }).isRequired,
+};
 
+export default TabItem;
