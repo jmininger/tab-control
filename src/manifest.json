@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Chrome Tab Manager",
+  "name": "Tab Control",
   "description": "List all open tabs grouped by window and allows merging windows.",
   "version": "1.0",
   "action": {
     "default_popup": "index.html",
-    "default_title": "Chrome Tab Manager"
+    "default_title": "Tab Control"
   },
   "permissions": ["tabs", "windows"]
 }
