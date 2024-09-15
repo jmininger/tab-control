@@ -1,75 +1,75 @@
-import React, { useEffect, useState } from 'react';
+// App.jsx
+import React, { useEffect, useState, useCallback } from 'react';
+import WindowItem from './WindowItem';
+import {
+  getAllWindows,
+  queryTabs,
+  moveTabs,
+  removeWindow,
+} from './utils';
+import './App.css';
 
 function App() {
   const [windows, setWindows] = useState([]);
-  const [selectedWindows, setSelectedWindows] = useState([]);
+  const [selectedWindowIds, setSelectedWindowIds] = useState([]);
 
-  useEffect(() => {
-    // Fetch all windows with their tabs
-    chrome.windows.getAll({ populate: true }, (windowList) => {
-      setWindows(windowList);
-    });
+  // Fetch all windows with their tabs
+  const fetchWindows = useCallback(async () => {
+    const windowList = await getAllWindows({ populate: true });
+    setWindows(windowList);
   }, []);
 
+  useEffect(() => {
+    fetchWindows();
+  }, [fetchWindows]);
+
+  // Handle selection of windows for merging
   const handleWindowSelect = (windowId) => {
-    setSelectedWindows((prev) => {
-      if (prev.includes(windowId)) {
-        return prev.filter((id) => id !== windowId);
+    setSelectedWindowIds((prevSelected) => {
+      if (prevSelected.includes(windowId)) {
+        return prevSelected.filter((id) => id !== windowId);
       } else {
-        return [...prev, windowId];
+        return [...prevSelected, windowId];
       }
     });
   };
 
-  const mergeWindows = () => {
-    if (selectedWindows.length !== 2) {
+  // Merge the selected windows
+  const mergeWindows = async () => {
+    if (selectedWindowIds.length !== 2) {
       alert('Please select exactly two windows to merge.');
       return;
     }
-    const [windowId1, windowId2] = selectedWindows;
 
-    // Move tabs from windowId2 to windowId1
-    chrome.tabs.query({ windowId: parseInt(windowId2) }, (tabs) => {
-      const tabIds = tabs.map((tab) => tab.id);
-      chrome.tabs.move(tabIds, { windowId: parseInt(windowId1), index: -1 }, () => {
-        // Close the second window
-        chrome.windows.remove(parseInt(windowId2), () => {
-          // Refresh the window list
-          chrome.windows.getAll({ populate: true }, (windowList) => {
-            setWindows(windowList);
-            setSelectedWindows([]);
-          });
-        });
-      });
-    });
+    const [windowId1, windowId2] = selectedWindowIds.map(Number);
+
+    // Get all tabs from the second window
+    const tabs = await queryTabs({ windowId: windowId2 });
+    const tabIds = tabs.map((tab) => tab.id);
+
+    // Move tabs to the first window
+    await moveTabs(tabIds, { windowId: windowId1, index: -1 });
+
+    // Close the second window
+    await removeWindow(windowId2);
+
+    // Refresh the window list
+    await fetchWindows();
+    setSelectedWindowIds([]);
   };
 
   return (
-    <div style={{ padding: '10px', fontFamily: 'Arial' }}>
+    <div className="app-container">
       <h2>Chrome Tab Manager</h2>
       {windows.map((win) => (
-        <div key={win.id} style={{ border: '1px solid #ccc', marginBottom: '10px', padding: '5px' }}>
-          <label>
-            <input
-              type="checkbox"
-              checked={selectedWindows.includes(win.id.toString())}
-              onChange={() => handleWindowSelect(win.id.toString())}
-            />
-            <strong> Window {win.id}</strong>
-          </label>
-          <ul>
-            {win.tabs.map((tab) => (
-              <li key={tab.id}>
-                {tab.favIconUrl && (
-                  <img src={tab.favIconUrl} alt="" width="16" height="16" style={{ verticalAlign: 'middle' }} />
-                )}{' '}
-                {tab.title}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <WindowItem
+          key={win.id}
+          window={win}
+          isSelected={selectedWindowIds.includes(win.id.toString())}
+          onSelect={handleWindowSelect}
+        />
       ))}
-      <button onClick={mergeWindows} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+      <button onClick={mergeWindows} className="merge-button">
         Merge Selected Windows
       </button>
     </div>
@@ -77,4 +77,3 @@ function App() {
 }
 
 export default App;
-
